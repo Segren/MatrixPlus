@@ -19,6 +19,11 @@ class S21Matrix {
   S21Matrix(S21Matrix &&other) noexcept;   // DONE
   ~S21Matrix();                            // DONE
 
+  int GetRows() const noexcept;
+  int GetCols() const noexcept;
+  void SetRows(int rowValue);
+  void SetCols(int colValue);
+
   bool EqMatrix(const S21Matrix &other) const;  // DONE
   void SumMatrix(const S21Matrix &other);       // DONE
   void SubMatrix(const S21Matrix &other);       // DONE
@@ -34,7 +39,7 @@ class S21Matrix {
   S21Matrix operator+(const S21Matrix &other) const;   // DONE
   S21Matrix operator-(const S21Matrix &other) const;   // DONE
   bool operator==(const S21Matrix &other) const;       // DONE
-  S21Matrix &operator=(const S21Matrix &other);        // DONE
+  S21Matrix &operator=(S21Matrix &&other);             // DONE
   S21Matrix operator+=(const S21Matrix &other);        // DONE
   S21Matrix operator-=(const S21Matrix &other);        // DONE
   S21Matrix operator*=(const S21Matrix &other);        // DONE

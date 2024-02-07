@@ -1,5 +1,6 @@
 #include "s21_matrix_oop.h"
 
+#include <algorithm>  // std::min
 #include <cmath>      // std::abs
 #include <stdexcept>  // error lib
 #include <stdexcept>  // logic_error
@@ -231,19 +232,16 @@ S21Matrix S21Matrix::operator*=(double number) {
   return *this;
 }
 
-S21Matrix &S21Matrix::operator=(const S21Matrix &other) {
+S21Matrix &S21Matrix::operator=(S21Matrix &&other) {
   if (this != &other) {
     Free();
     rows_ = other.rows_;
     cols_ = other.cols_;
+    matrix_ = other.matrix_;
 
-    matrix_ = new double *[rows_];
-    for (int i = 0; i < rows_; i++) {
-      matrix_[i] = new double[cols_];
-      for (int j = 0; j < cols_; j++) {
-        matrix_[i][j] = other.matrix_[i][j];
-      }
-    }
+    other.rows_ = 0;
+    other.cols_ = 0;
+    other.matrix_ = nullptr;
   }
   return *this;
 }
@@ -289,4 +287,25 @@ S21Matrix S21Matrix::InverseMatrix() const {
   S21Matrix transposed_matrix = complements.Transpose();
   S21Matrix result = transposed_matrix * (1 / det);
   return result;
+}
+
+int S21Matrix::GetRows() const noexcept { return rows_; }
+
+int S21Matrix::GetCols() const noexcept { return cols_; }
+
+void S21Matrix::SetRows(int rowValue) {
+  if (rowValue < 0) {
+    throw std::length_error("SetRows: can not set negative row value");
+  }
+  if (rowValue != rows_) {
+    int min = std::min(rows_, rowValue);
+    S21Matrix tmp(rowValue, cols_);
+    for (int i = 0; i < min; ++i) {
+      for (int j = 0; j < cols_; ++j) {
+        tmp(i, j) = (*this)(i, j);
+      }
+    }
+    *this = std::move(tmp);
+    tmp.Free();
+  }
 }
