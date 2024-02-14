@@ -309,3 +309,20 @@ void S21Matrix::SetRows(int rowValue) {
     tmp.Free();
   }
 }
+
+void S21Matrix::SetCols(int colValue) {
+  if (colValue < 0) {
+    throw std::length_error("SetCols: can not set negative col value");
+  }
+  if (colValue != cols_) {
+    int min = std::min(rows_, colValue);
+    S21Matrix tmp(rows_, colValue);
+    for (int i = 0; i < rows_; ++i) {
+      for (int j = 0; j < min; ++j) {
+        tmp(i, j) = (*this)(i, j);
+      }
+    }
+    *this = std::move(tmp);
+    tmp.Free();
+  }
+}

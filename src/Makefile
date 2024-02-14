@@ -1,11 +1,13 @@
 CC = g++
-CFLAGS = -Wall -Werror -Wextra -std=c++17 -pedantic -g
+CFLAGS = -Wall -Werror -Wextra -std=c++17 -pedantic -g -DGTEST_HAS_PTHREAD=1
+CFLAGS += -I/opt/homebrew/Cellar/googletest/1.14.0/include
+LDFLAGS = -L/opt/homebrew/Cellar/googletest/1.14.0/lib
 V_COMMAND = valgrind --trace-children=yes --track-fds=yes --track-origins=yes --leak-check=full --show-leak-kinds=all -s
 L_COMMAND = leaks -atExit --
 
 PATH_TO_OBJ = objects/
 PATH_TO_TESTS = test/
-PATH_TO_MAIN = ./
+PATH_TO_MAIN = main_functions/
 PATH_TO_REPORT = report/
 LIB_NAME = s21_matrix_oop.a
 EXEC_T = unit_tests
@@ -15,10 +17,8 @@ OBJ = $(patsubst %.cpp, $(PATH_TO_OBJ)%.o, $(SRC))
 SRC_T = $(wildcard $(PATH_TO_TESTS)*.cpp)
 OBJ_T = $(patsubst %.cpp, $(PATH_TO_OBJ)%.o, $(SRC_T))
 
-ifeq ($(OS), Darwin)
-	CFLAGS+=$(shell pkg-config --cflags check) 
-	LIBS+=$(shell pkg-config --libs check)
-endif
+CFLAGS+=$(shell pkg-config --cflags gtest) -pthread
+LIBS+=$(shell pkg-config --libs gtest)
 
 all: $(LIB_NAME)
 
@@ -27,14 +27,8 @@ s21_matrix_oop.a: $(OBJ)
 	@ranlib $@
 
 test: clean coverage_flag $(OBJ_T) $(LIB_NAME)
-
-ifeq ($(OS), Darwin)
-	$(CC) $(CFLAGS) $(OBJ_T) $(LIB_NAME) $(LIBS) -o $(PATH_TO_TESTS)$(EXEC_T)
+	$(CC) $(CFLAGS) $(OBJ_T) $(LIB_NAME) $(LIBS) -o $(PATH_TO_TESTS)$(EXEC_T) $(LDFLAGS)
 	$(PATH_TO_TESTS)./$(EXEC_T)
-else
-	$(CC) $(CFLAGS) $(OBJ_T) $(LIB_NAME) -o $(PATH_TO_TESTS)$(EXEC_T) -lcheck -lsubunit -lrt -lpthread -lm
-	$(PATH_TO_TESTS)./$(EXEC_T)
-endif
 
 $(PATH_TO_OBJ)%.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
