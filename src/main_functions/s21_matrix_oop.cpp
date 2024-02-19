@@ -8,31 +8,12 @@
 
 S21Matrix::S21Matrix() : rows_(0), cols_(0) {
   matrix_ = new double *[rows_] {};
-  for (int i = 0; i < rows_; ++i) {
-    try {
-      matrix_[i] = new double[cols_]{};
-    } catch (...) {
-      for (int j = 0; j < i; ++j) {
-        delete[] matrix_[j];
-      }
-      delete[] matrix_;
-      throw;
-    }
-  }
 }
 
 S21Matrix::S21Matrix(int rows, int cols) : rows_(rows), cols_(cols) {
   matrix_ = new double *[rows_] {};
   for (int i = 0; i < rows_; ++i) {
-    try {
-      matrix_[i] = new double[cols_]{};
-    } catch (...) {
-      for (int j = 0; j < i; ++j) {
-        delete[] matrix_[j];
-      }
-      delete[] matrix_;
-      throw;
-    }
+    matrix_[i] = new double[cols_]{};
   }
 }
 
@@ -83,10 +64,13 @@ S21Matrix S21Matrix::MinorMatrix(const int skip_row,
 
 bool S21Matrix::EqMatrix(const S21Matrix &other) const {
   bool flag = true;
-  if (rows_ != other.rows_ || cols_ != other.cols_) flag = false;
-  for (int i = 0; i < rows_; i++) {
-    for (int j = 0; j < cols_; j++) {
-      if (std::abs((*this)(i, j) - other(i, j)) > EPSILON) flag = false;
+  if (rows_ != other.rows_ || cols_ != other.cols_)
+    flag = false;
+  else {
+    for (int i = 0; i < rows_; i++) {
+      for (int j = 0; j < cols_; j++) {
+        if (std::abs((*this)(i, j) - other(i, j)) > EPSILON) flag = false;
+      }
     }
   }
   return flag;
@@ -183,8 +167,6 @@ double &S21Matrix::operator()(int row, int col) & {
 
 // версия для чтения
 const double &S21Matrix::operator()(int row, int col) const & {
-  if (row >= rows_ || col >= cols_ || row < 0 || col < 0)
-    throw std::out_of_range("Index out of range");
   return matrix_[row][col];
 }
 
@@ -255,7 +237,7 @@ S21Matrix S21Matrix::CalcComplements() const {
     throw std::logic_error("CalcComplements: incorrect matrix size");
   }
 
-  S21Matrix result;
+  S21Matrix result(rows_, cols_);
   for (int i = 0; i < rows_; ++i) {
     for (int j = 0; j < cols_; ++j) {
       double minor = S21Matrix::calculate_minor(i, j);
@@ -280,7 +262,7 @@ S21Matrix S21Matrix::InverseMatrix() const {
     throw std::logic_error("InverseMatrix: incorrect matrix size");
   }
   double det = S21Matrix::Determinant();
-  if (det < EPSILON) {
+  if (fabs(det) < EPSILON) {
     throw std::logic_error("InverseMatrix: determinant must be non-zero");
   }
   S21Matrix complements = S21Matrix::CalcComplements();
@@ -315,7 +297,7 @@ void S21Matrix::SetCols(int colValue) {
     throw std::length_error("SetCols: can not set negative col value");
   }
   if (colValue != cols_) {
-    int min = std::min(rows_, colValue);
+    int min = std::min(cols_, colValue);
     S21Matrix tmp(rows_, colValue);
     for (int i = 0; i < rows_; ++i) {
       for (int j = 0; j < min; ++j) {
